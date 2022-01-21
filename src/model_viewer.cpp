@@ -33,7 +33,7 @@ struct Context {
     GLuint program;
     GLuint emptyVAO;
     float elapsedTime;
-    std::string gltfFilename = "triangle.gltf";
+    std::string gltfFilename = "cube_rgb.gltf";
     // Add more variables here...
 };
 
@@ -77,6 +77,9 @@ void draw_scene(Context &ctx)
 
     // Define per-scene uniforms
     glUniform1f(glGetUniformLocation(ctx.program, "u_time"), ctx.elapsedTime);
+
+    glm::mat4 view = glm::mat4(ctx.trackball.orient);
+    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_view"), 1, GL_FALSE, &view[0][0]);
     // ...
 
     // Draw scene
