@@ -36,6 +36,30 @@ struct Context {
     std::string gltfFilename = "armadillo.gltf";
     bool my_tool_active = true;
     glm::vec3 background_color;
+    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 look_at_direction = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 up_direction = glm::vec3(0.0f, 1.0f, 0.0f);
+    float fov_deg = 45.0f;
+    float aspect_ratio = 1.0f;
+    float near_clip = 0.1f;
+    float far_clip = 100.0f;
+    glm::vec3 scale = glm::vec3(0.5f, 0.5f, 0.5f);
+    float rotation_angle_deg = 90.0f;
+    glm::vec3 rotation = glm::vec3(1.0, 0.0, 0.0);
+    glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 ambient_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 diffuse_color = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 specular_color = glm::vec3(1.0f, 1.0f, 1.0f);
+    float specular_power = 100.0f;
+    glm::vec3 light_position = glm::vec3(1.0f, 1.0f, 1.0f);
+    bool display_surface_normals_as_RGB = false;
+    bool orthographic_mode_on = false;
+    float orthographic_left = -1.0f;
+    float orthographic_right = 1.0f;
+    float orthographic_bottom = -1.0f;
+    float orthographic_top = 1.0f;
+    float zoom_factor = 1.0f;
+    float zoom_step = 0.1f;
     // Add more variables here...
 };
 
@@ -80,31 +104,38 @@ void draw_scene(Context &ctx)
     // Define per-scene uniforms
     glUniform1f(glGetUniformLocation(ctx.program, "u_time"), ctx.elapsedTime);
 
+    // glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 1.0f);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_cameraPosition"), 1, &ctx.camera_position[0]);
     glm::mat4 view = glm::mat4(ctx.trackball.orient);
-    glm::mat4 look_at = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f), 
-  		                            glm::vec3(0.0f, 0.0f, 0.0f), 
-  		                            glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 look_at = glm::lookAt(ctx.camera_position, 
+  		                            ctx.look_at_direction, 
+  		                            ctx.up_direction);
     view = look_at * view;
     glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_view"), 1, GL_FALSE, &view[0][0]);
 
-    glm::mat4 projection = glm::mat4(1.0f);
-    projection = projection * glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
-    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_projection"), 1, GL_FALSE, &projection[0][0]);
+    glm::mat4 perspective_projection = glm::mat4(1.0f);
+    perspective_projection = glm::perspective(glm::radians(ctx.fov_deg * ctx.zoom_factor), ctx.aspect_ratio, ctx.near_clip, ctx.far_clip) * perspective_projection;
+    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_projection"), 1, GL_FALSE, &perspective_projection[0][0]);
+    glm::mat4 orthographic_projection = glm::mat4(1.0f);
+    orthographic_projection = glm::ortho(ctx.orthographic_left, ctx.orthographic_right, ctx.orthographic_bottom, ctx.orthographic_top, ctx.near_clip, ctx.far_clip) * orthographic_projection;
+    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_orthographic"), 1, GL_FALSE, &orthographic_projection[0][0]);
 
     glm::mat4 transform = glm::mat4(1.0f);
-    transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));
-    transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
-    transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.0f));
-    // glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_transform"), 1, GL_FALSE, &transform[0][0]);
+    transform = glm::scale(transform, ctx.scale);
+    transform = glm::rotate(transform, glm::radians(ctx.rotation_angle_deg), ctx.rotation);
+    transform = glm::translate(transform, ctx.translation);
 
     glm::mat4 model = glm::mat4(1.0f);
     model = transform * model;
     glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_model"), 1, GL_FALSE, &model[0][0]);
 
-    glm::vec3 diffuseColor = glm::vec3(1.0, 0.0, 0.0);
-    glUniform3fv(glGetUniformLocation(ctx.program, "u_diffuseColor"), 1, &diffuseColor[0]);
-    glm::vec3 lightPosition = glm::vec3(1.0, 1.0, 1.0);
-    glUniform3fv(glGetUniformLocation(ctx.program, "u_lightPosition"), 1, &lightPosition[0]);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_ambientColor"), 1, &ctx.ambient_color[0]);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_diffuseColor"), 1, &ctx.diffuse_color[0]);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_specularColor"), 1, &ctx.specular_color[0]);
+    glUniform1f(glGetUniformLocation(ctx.program, "u_specularPower"), ctx.specular_power);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_lightPosition"), 1, &ctx.light_position[0]);
+    glUniform1i(glGetUniformLocation(ctx.program, "u_displaySurfaceNormalsAsRGB"), ctx.display_surface_normals_as_RGB);
+    glUniform1i(glGetUniformLocation(ctx.program, "u_orthographicModeOn"), ctx.orthographic_mode_on);
     // ...
 
     // Draw scene
@@ -197,6 +228,9 @@ void scroll_callback(GLFWwindow *window, double x, double y)
     // Forward event to ImGui
     ImGui_ImplGlfw_ScrollCallback(window, x, y);
     if (ImGui::GetIO().WantCaptureMouse) return;
+
+    Context *ctx = static_cast<Context *>(glfwGetWindowUserPointer(window));
+    ctx->zoom_factor = ctx->zoom_factor + ctx->zoom_step * y * (-1);
 }
 
 void resize_callback(GLFWwindow *window, int width, int height)
@@ -212,8 +246,29 @@ void ShowMyWindow(Context &ctx) {
     // Create a window called "Tools", with a menu bar.
     ImGui::Begin("Tools", &ctx.my_tool_active, ImGuiWindowFlags_MenuBar);
 
-    // Edit a color (stored as ~3 floats)
-    ImGui::ColorEdit3("Color", &ctx.background_color[0]);
+    ImGui::ColorEdit3("Background color", &ctx.background_color[0]);
+    ImGui::DragFloat3("Camera position", &ctx.camera_position[0]);
+    ImGui::DragFloat3("Look at direction", &ctx.look_at_direction[0]);
+    ImGui::DragFloat3("Up direction", &ctx.up_direction[0]);
+    ImGui::DragFloat("FOV (degrees)", &ctx.fov_deg);
+    ImGui::DragFloat("Aspect ratio", &ctx.aspect_ratio);
+    ImGui::DragFloat("Near clip", &ctx.near_clip);
+    ImGui::DragFloat("Far clip", &ctx.far_clip);
+    ImGui::DragFloat3("Scale (X, Y, Z)", &ctx.scale[0]);
+    ImGui::DragFloat("Rotation angle (degrees)", &ctx.rotation_angle_deg);
+    ImGui::DragFloat3("Rotation (X, Y, Z)", &ctx.rotation[0]);
+    ImGui::DragFloat3("Translation (X, Y, Z)", &ctx.translation[0]);
+    ImGui::ColorEdit3("Ambient color", &ctx.ambient_color[0]);
+    ImGui::ColorEdit3("Diffuse color", &ctx.diffuse_color[0]);
+    ImGui::ColorEdit3("Specular color", &ctx.specular_color[0]);
+    ImGui::DragFloat("Specular power", &ctx.specular_power);
+    ImGui::DragFloat3("Light position (X, Y, Z)", &ctx.light_position[0]);
+    ImGui::Checkbox("Display surface normals as RGB", &ctx.display_surface_normals_as_RGB);
+    ImGui::Checkbox("Turn on orthographic projection mode", &ctx.orthographic_mode_on);
+    ImGui::DragFloat("Orthographic left", &ctx.orthographic_left);
+    ImGui::DragFloat("Orthographic right", &ctx.orthographic_right);
+    ImGui::DragFloat("Orthographic bottom", &ctx.orthographic_bottom);
+    ImGui::DragFloat("Orthographic top", &ctx.orthographic_top);
 
     ImGui::End();
 }
