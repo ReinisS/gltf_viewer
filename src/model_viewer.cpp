@@ -81,7 +81,25 @@ void draw_scene(Context &ctx)
     glUniform1f(glGetUniformLocation(ctx.program, "u_time"), ctx.elapsedTime);
 
     glm::mat4 view = glm::mat4(ctx.trackball.orient);
+    glm::mat4 look_at = glm::lookAt(glm::vec3(0.0f, 0.0f, 1.0f), 
+  		                            glm::vec3(0.0f, 0.0f, 0.0f), 
+  		                            glm::vec3(0.0f, 1.0f, 0.0f));
+    view = look_at * view;
     glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_view"), 1, GL_FALSE, &view[0][0]);
+
+    glm::mat4 projection = glm::mat4(1.0f);
+    projection = projection * glm::perspective(45.0f, 1.0f, 0.1f, 100.0f);
+    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_projection"), 1, GL_FALSE, &projection[0][0]);
+
+    glm::mat4 transform = glm::mat4(1.0f);
+    transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));
+    transform = glm::rotate(transform, glm::radians(90.0f), glm::vec3(1.0, 0.0, 0.0));
+    transform = glm::translate(transform, glm::vec3(0.0f, 0.0f, 0.0f));
+    // glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_transform"), 1, GL_FALSE, &transform[0][0]);
+
+    glm::mat4 model = glm::mat4(1.0f);
+    model = transform * model;
+    glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_model"), 1, GL_FALSE, &model[0][0]);
     // ...
 
     // Draw scene
