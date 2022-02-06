@@ -24,8 +24,8 @@
 
 // Struct for our application context
 struct Context {
-    int width = 512;
-    int height = 512;
+    int width = 768;
+    int height = 768;
     GLFWwindow *window;
     gltf::GLTFAsset asset;
     gltf::DrawableList drawables;
@@ -33,7 +33,9 @@ struct Context {
     GLuint program;
     GLuint emptyVAO;
     float elapsedTime;
-    std::string gltfFilename = "cube_rgb.gltf";
+    std::string gltfFilename = "armadillo.gltf";
+    bool my_tool_active = true;
+    glm::vec3 background_color;
     // Add more variables here...
 };
 
@@ -108,7 +110,7 @@ void do_rendering(Context &ctx)
     cg::reset_gl_render_state();
 
     // Clear color and depth buffers
-    glClearColor(0.5f, 0.5f, 0.5f, 0.0f);
+    glClearColor(ctx.background_color[0], ctx.background_color[1], ctx.background_color[2], 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     draw_scene(ctx);
@@ -183,6 +185,16 @@ void resize_callback(GLFWwindow *window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
+void ShowMyWindow(Context &ctx) {
+    // Create a window called "Tools", with a menu bar.
+    ImGui::Begin("Tools", &ctx.my_tool_active, ImGuiWindowFlags_MenuBar);
+
+    // Edit a color (stored as ~3 floats)
+    ImGui::ColorEdit3("Color", &ctx.background_color[0]);
+
+    ImGui::End();
+}
+
 int main(int argc, char *argv[])
 {
     Context ctx = Context();
@@ -232,6 +244,7 @@ int main(int argc, char *argv[])
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         // ImGui::ShowDemoWindow();
+        ShowMyWindow(ctx);
         do_rendering(ctx);
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
