@@ -100,6 +100,11 @@ void draw_scene(Context &ctx)
     glm::mat4 model = glm::mat4(1.0f);
     model = transform * model;
     glUniformMatrix4fv(glGetUniformLocation(ctx.program, "u_model"), 1, GL_FALSE, &model[0][0]);
+
+    glm::vec3 diffuseColor = glm::vec3(1.0, 0.0, 0.0);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_diffuseColor"), 1, &diffuseColor[0]);
+    glm::vec3 lightPosition = glm::vec3(1.0, 1.0, 1.0);
+    glUniform3fv(glGetUniformLocation(ctx.program, "u_lightPosition"), 1, &lightPosition[0]);
     // ...
 
     // Draw scene
