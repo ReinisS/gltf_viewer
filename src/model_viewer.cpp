@@ -36,14 +36,14 @@ struct Context {
     std::string gltfFilename = "armadillo.gltf";
     bool my_tool_active = true;
     glm::vec3 background_color;
-    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 5.0f);
     glm::vec3 look_at_direction = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 up_direction = glm::vec3(0.0f, 1.0f, 0.0f);
     float fov_deg = 45.0f;
     float aspect_ratio = 1.0f;
     float near_clip = 0.1f;
     float far_clip = 100.0f;
-    glm::vec3 scale = glm::vec3(0.5f, 0.5f, 0.5f);
+    glm::vec3 scale = glm::vec3(1.0f, 1.0f, 1.0f);
     float rotation_angle_deg = 90.0f;
     glm::vec3 rotation = glm::vec3(1.0, 0.0, 0.0);
     glm::vec3 translation = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -54,10 +54,10 @@ struct Context {
     glm::vec3 light_position = glm::vec3(1.0f, 1.0f, 1.0f);
     bool display_surface_normals_as_RGB = false;
     bool orthographic_mode_on = false;
-    float orthographic_left = -1.0f;
-    float orthographic_right = 1.0f;
-    float orthographic_bottom = -1.0f;
-    float orthographic_top = 1.0f;
+    float orthographic_left = -2.0f;
+    float orthographic_right = 2.0f;
+    float orthographic_bottom = -2.0f;
+    float orthographic_top = 2.0f;
     float zoom_factor = 1.0f;
     float zoom_step = 0.1f;
     // Add more variables here...
